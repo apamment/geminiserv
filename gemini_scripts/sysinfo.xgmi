@@ -1,0 +1,37 @@
+load("sbbsdefs.js")
+load("nodedefs.js")
+
+function writeln(str) {
+    client.socket.send(str + "\r\n");
+}
+
+writeln("20 text/gemini");
+
+writeln("# " + system.name + " Information");
+writeln("");
+writeln(" * SysOp: " + system.operator);
+writeln(" * Location: " + system.location);
+
+total = time() - system.uptime;
+days = Math.floor(total / (24 * 60 * 60));
+if(days) {
+    total %= (24 * 60 * 60);
+}
+hours = Math.floor(total / (60 * 60));
+min = (Math.floor(total / 60)) % 60;
+sec = total % 60;
+
+writeln(" * Uptime: " + format("%u days, %u hours, %u minutes and %u seconds.", days, hours, min, sec));
+writeln("");
+
+writeln("# Server Information");
+writeln("");
+writeln(" * Synchronet Gemini Service " + gemini_version);
+writeln(" * " + server.version);
+writeln(" * " + system.version_notice + system.revision + system.beta_version);
+writeln(" * Compiled " + system.compiled_when + " with " + system.compiled_with);
+writeln(" * " + system.js_version);
+writeln(" * " + system.os_version);
+writeln("");
+writeln("=> https://synchro.net/ Synchronet BBS");
+

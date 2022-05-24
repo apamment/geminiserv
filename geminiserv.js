@@ -14,6 +14,7 @@ load("string.js");
 load("sbbsdefs.js");
 load("nodedefs.js");
 
+const REVISION = "1.0";
 const GEMINI_PORT = client.socket.local_port;
 
 function write(str)
@@ -24,6 +25,15 @@ function write(str)
 function writeln(str)
 {
     write(str + "\r\n");
+}
+
+function execute_file(req_file) {
+    f = req_file.split(/[\\/]/).pop();
+    d = req_file.substring(0, req_file.length - f.length);
+    js.exec.apply(null, [req_file, d, {
+                                        query : purl.query,
+                                        gemini_version  : REVISION 
+    }]);
 }
 
 function send_file(req_file) {
@@ -96,6 +106,8 @@ if (file_isdir(req_file)) {
         send_file(backslash(req_file) + "index.gmi");
     } else if (file_exists(backslash(req_file) + "index.gemini")) {
         send_file(backslash(req_file) + "index.gemini");
+    } else if (file_exists(backslash(req_file) + "index.xgmi")) {
+        execute_file(backslash(req_file) + "index.xgmi");
     } else {
         var diritems = directory(backslash(req_file) + '*');
 
@@ -125,7 +137,11 @@ if (file_isdir(req_file)) {
     }
 } else {
     if (file_exists(req_file)) {
-        send_file(req_file);
+        if (file_getext(req_file).substring(1).toLowerCase() == "xgmi") {
+            execute_file(req_file);
+        } else {
+            send_file(req_file);
+        }
     } else {
         writeln("51 NOT FOUND");
     }
