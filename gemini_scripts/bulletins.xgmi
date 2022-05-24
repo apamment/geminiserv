@@ -1,0 +1,65 @@
+load("sbbsdefs.js")
+load("nodedefs.js")
+
+const GEMINI_PORT = client.socket.local_port;
+
+function writeln(str) {
+    client.socket.send(str + "\r\n");
+}
+
+writeln("20 text/gemini");
+
+
+var msgbase = new MsgBase("LOCAL-BULLSHIT");
+
+if (query === undefined) {
+    msgbase.open();
+    writeln("# Bulletins - " + system.name);
+    writeln("");
+    for (var h = msgbase.last_msg; h >= msgbase.first_msg; h = h - 1) {
+        try {
+            var msg = msgbase.get_msg_header(h);
+        } catch (err) {
+            continue;
+        }
+
+        if (msg === null) continue;
+        if (!(msg.attr & MSG_DELETE)) {
+            if (GEMINI_PORT != 1965) {
+                writeln("=> gemini://" + system.inet_addr + ":" + GEMINI_PORT + "/bulletins.xgmi?" + h + " " + msg['subject']);
+            } else {
+                writeln("=> gemini://" + system.inet_addr + "/bulletins.xgmi?" + h + " " + msg['subject']);
+            }
+        }
+    }
+    msgbase.close();
+    writeln("");
+    if (GEMINI_PORT != 1965) {
+        writeln("=> gemini://" + system.inet_addr + ":" + GEMINI_PORT + "/ Back");
+    } else {
+        writeln("=> gemini://" + system.inet_addr + "/ Back");
+    }    
+
+} else {
+    msgbase.open();
+    var hdr = msgbase.get_msg_header(parseInt(query));
+    
+    if (hdr !== undefined && !(hdr.attr & MSG_DELETE)) {
+        var msg = msgbase.get_msg_body(parseInt(query));
+
+        writeln("# " + hdr.subject);
+        writeln("");
+        writeln(msg);
+    } else {
+        writeln("# No Such Bulletin");
+        writeln("");
+        writeln("No bulletin with that index exists. It either never existed or has been deleted.");
+    }
+    msgbase.close();
+    writeln("")
+    if (GEMINI_PORT != 1965) {
+        writeln("=> gemini://" + system.inet_addr + ":" + GEMINI_PORT + "/bulletins.xgmi Back");
+    } else {
+        writeln("=> gemini://" + system.inet_addr + "/bulletins.xgmi Back");
+    }    
+}
